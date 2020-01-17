@@ -1,0 +1,12 @@
+{
+    "name": "dekabruga/gendiff",
+    "authors": [
+        {
+            "name": "Gleb",
+            "email": "gleb__l@mail.ru"
+        }
+    ],
+    "require": {
+        "docopt/docopt": "^1.0"
+    }
+}
