@@ -1,12 +1,22 @@
 {
     "name": "dekabruga/gendiff",
+    "bin": [
+        "bin/gendiff"
+    ],
     "authors": [
         {
             "name": "Gleb",
             "email": "gleb__l@mail.ru"
         }
     ],
+    "autoload": {
+        "files": [
+            "src/engine.php",
+            "src/Differ/gendiff.php"
+        ]
+    },
     "require": {
-        "docopt/docopt": "^1.0"
+        "docopt/docopt": "^1.0",
+        "funct/funct": "^1.5"
     }
 }
