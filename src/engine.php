@@ -19,7 +19,7 @@ function run()
 
 DOC;
 
-    $args = \Docopt::handle($doc, array('version'=>'Gendiff 0.0.1'));
+    $args = \Docopt::handle($doc, array('version' => 'Gendiff 0.0.1'));
     $firstFile = $args['<firstFile>'];
     $secondFile = $args['<secondFile>'];
     print_r(Differ\genDiff($firstFile, $secondFile));

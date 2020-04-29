@@ -13,14 +13,14 @@ function genDiff($pathToFile1, $pathToFile2)
     $deleted = getUniqueKeys($data1, $data2);
     $added = getUniqueKeys($data2, $data1);
 
-    $unchangedKeys = array_reduce($unchanged, function($acc, $item) {
+    $unchangedKeys = array_reduce($unchanged, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
         $acc = "{$acc}\n\t  {$key}: {$value}";
         return $acc;
     }, "{");
 
-    $changedKeys = array_reduce($changed, function($acc, $item) {
+    $changedKeys = array_reduce($changed, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
         $acc = "{$acc}\n\t+ {$key}: {$value[0]}";
@@ -72,11 +72,11 @@ function getMapData($data)
 
 function getChangedKeys($data1, $data2)
 {
-    $changedKeys1 = array_filter($data1, function($value, $key) use ($data2) {
+    $changedKeys1 = array_filter($data1, function ($value, $key) use ($data2) {
         return array_key_exists($key, $data2) && $value !== $data2[$key];
     }, ARRAY_FILTER_USE_BOTH);
     
-    $changedKeys2 = array_filter($data2, function($value, $key) use ($data1) {
+    $changedKeys2 = array_filter($data2, function ($value, $key) use ($data1) {
                 return array_key_exists($key, $data1) && $value !== $data1[$key];
     }, ARRAY_FILTER_USE_BOTH);
 
@@ -92,7 +92,7 @@ function getChangedKeys($data1, $data2)
 
 function getUniqueKeys($data1, $data2)
 {
-    $uniqueKeys = array_filter($data1, function($value, $key) use ($data2) {
+    $uniqueKeys = array_filter($data1, function ($value, $key) use ($data2) {
                 return !array_key_exists($key, $data2);
     }, ARRAY_FILTER_USE_BOTH);
 
@@ -101,7 +101,7 @@ function getUniqueKeys($data1, $data2)
 
 function getUnchanchedKeys($data1, $data2)
 {
-    $uniqueKeys = array_filter($data1, function($value, $key) use ($data2) {
+    $uniqueKeys = array_filter($data1, function ($value, $key) use ($data2) {
         return array_key_exists($key, $data2) && $value === $data2[$key];
     }, ARRAY_FILTER_USE_BOTH);
 
