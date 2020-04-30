@@ -20,19 +20,8 @@ function run()
 DOC;
 
     $args = \Docopt::handle($doc, array('version' => 'Gendiff 0.0.1'));
-    $firstFilePath = getFilePath($args['<firstFile>']);
-    $secondFilePath = getFilePath($args['<secondFile>']);
-    //print_r($_SERVER);
+    $firstFilePath = $args['<firstFile>'];
+    $secondFilePath = $args['<secondFile>'];
     echo Differ\genDiff($firstFilePath, $secondFilePath);
 }
 
-function getFilePath($path)
-{
-    $explodedPath = explode('/', $path);
-    if ($explodedPath[1] == 'home') {
-        return $path;
-    }
-    $pwd = $_SERVER['PWD'];
-    $path = "{$pwd}/{$path}";
-    return $path;
-}

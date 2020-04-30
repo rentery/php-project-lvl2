@@ -6,6 +6,8 @@ use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2)
 {
+    $pathToFile1 = getFilePath($pathToFile1);
+    $pathToFile2 = getFilePath($pathToFile2);
     $data1 = getDataFromFile($pathToFile1);
     $data2 = getDataFromFile($pathToFile2);
     $unchanged = getUnchanchedKeys($data1, $data2);
@@ -46,7 +48,16 @@ function genDiff($pathToFile1, $pathToFile2)
     return $diff;
 }
 
-
+function getFilePath($path)
+{
+    $explodedPath = explode('/', $path);
+    if ($explodedPath[1] == 'home') {
+        return $path;
+    }
+    $pwd = $_SERVER['PWD'];
+    $path = "{$pwd}/{$path}";
+    return $path;
+}
 
 function getDataFromFile($pathToFile)
 {
