@@ -64,6 +64,12 @@ function getDataFromFile($pathToFile)
 function getMapData($data)
 {
     $mapping = array_map(function ($key, $value) {
+        if ($value === true) {
+            $value = 'true';
+        }
+        if ($value === false) {
+            $value = 'false';
+        }
         return ['key' => $key, 'value' => $value];
     }, array_keys($data), $data);
 
