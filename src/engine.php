@@ -24,4 +24,3 @@ DOC;
     $secondFilePath = $args['<secondFile>'];
     echo Differ\genDiff($firstFilePath, $secondFilePath);
 }
-

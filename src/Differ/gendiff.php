@@ -2,14 +2,14 @@
 
 namespace Differ\Differ;
 
-use function Funct\Collection\union;
+//use function Differ\Differ\parseData;
 
 function genDiff($pathToFile1, $pathToFile2)
 {
-    $pathToFile1 = getFilePath($pathToFile1);
-    $pathToFile2 = getFilePath($pathToFile2);
-    $data1 = getDataFromFile($pathToFile1);
-    $data2 = getDataFromFile($pathToFile2);
+    $data1 = parseData($pathToFile1);
+    $data2 = parseData($pathToFile2);
+    $data1 = get_object_vars($data1);
+    $data2 = get_object_vars($data2);
     $unchanged = getUnchanchedKeys($data1, $data2);
     $changed = getChangedKeys($data1, $data2);
     $deleted = getUniqueKeys($data1, $data2);
@@ -48,29 +48,6 @@ function genDiff($pathToFile1, $pathToFile2)
     return $diff;
 }
 
-function getFilePath($path)
-{
-    $explodedPath = explode('/', $path);
-    if ($explodedPath[1] == 'home') {
-        return $path;
-    }
-    $pwd = $_SERVER['PWD'];
-    $path = "{$pwd}/{$path}";
-    return $path;
-}
-
-function getDataFromFile($pathToFile)
-{
-    $raw = file_get_contents($pathToFile);
-    if ($raw === false) {
-        return;
-    }
-    $data = json_decode($raw, true);
-    if (json_last_error() !== 0) {
-        return json_last_error_msg();
-    }
-    return $data;
-}
 
 function getMapData($data)
 {
@@ -109,9 +86,9 @@ function getChangedKeys($data1, $data2)
 
 function getUniqueKeys($data1, $data2)
 {
-    $uniqueKeys = array_filter($data1, function ($value, $key) use ($data2) {
+    $uniqueKeys = array_filter($data1, function ($key) use ($data2) {
                 return !array_key_exists($key, $data2);
-    }, ARRAY_FILTER_USE_BOTH);
+    }, ARRAY_FILTER_USE_KEY);
 
     return getMapData($uniqueKeys);
 }
