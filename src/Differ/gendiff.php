@@ -18,29 +18,29 @@ function genDiff($pathToFile1, $pathToFile2)
     $unchangedKeys = array_reduce($unchanged, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
-        $acc = "{$acc}\n\t  {$key}: {$value}";
+        $acc = "{$acc}\n    {$key}: {$value}";
         return $acc;
     }, "{");
 
     $changedKeys = array_reduce($changed, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
-        $acc = "{$acc}\n\t+ {$key}: {$value[0]}";
-        $acc = "{$acc}\n\t- {$key}: {$value[1]}";
+        $acc = "{$acc}\n  + {$key}: {$value[0]}";
+        $acc = "{$acc}\n  - {$key}: {$value[1]}";
         return $acc;
     }, "");
 
     $deletedKeys = array_reduce($deleted, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
-        $acc = "{$acc}\n\t- {$key}: {$value}";
+        $acc = "{$acc}\n  - {$key}: {$value}";
         return $acc;
     }, "");
 
     $addedKeys = array_reduce($added, function ($acc, $item) {
         $key = $item['key'];
         $value = $item['value'];
-        $acc = "{$acc}\n\t+ {$key}: {$value}";
+        $acc = "{$acc}\n  + {$key}: {$value}";
         return $acc;
     }, "");
 
