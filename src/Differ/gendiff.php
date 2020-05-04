@@ -2,102 +2,111 @@
 
 namespace Differ\Differ;
 
-//use function Differ\Differ\parseData;
+use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2)
 {
     $data1 = parseData($pathToFile1);
     $data2 = parseData($pathToFile2);
+
     $data1 = get_object_vars($data1);
     $data2 = get_object_vars($data2);
-    $unchanged = getUnchanchedKeys($data1, $data2);
-    $changed = getChangedKeys($data1, $data2);
-    $deleted = getUniqueKeys($data1, $data2);
-    $added = getUniqueKeys($data2, $data1);
 
-    $unchangedKeys = array_reduce($unchanged, function ($acc, $item) {
+    $keysWithStates = getStates($data1, $data2);
+
+    $diff = array_map(function ($item) {
         $key = $item['key'];
         $value = $item['value'];
-        $acc = "{$acc}\n    {$key}: {$value}";
-        return $acc;
-    }, "{");
-
-    $changedKeys = array_reduce($changed, function ($acc, $item) {
-        $key = $item['key'];
-        $value = $item['value'];
-        $acc = "{$acc}\n  + {$key}: {$value[0]}";
-        $acc = "{$acc}\n  - {$key}: {$value[1]}";
-        return $acc;
-    }, "");
-
-    $deletedKeys = array_reduce($deleted, function ($acc, $item) {
-        $key = $item['key'];
-        $value = $item['value'];
-        $acc = "{$acc}\n  - {$key}: {$value}";
-        return $acc;
-    }, "");
-
-    $addedKeys = array_reduce($added, function ($acc, $item) {
-        $key = $item['key'];
-        $value = $item['value'];
-        $acc = "{$acc}\n  + {$key}: {$value}";
-        return $acc;
-    }, "");
-
-    $diff = "{$unchangedKeys}{$changedKeys}{$deletedKeys}{$addedKeys}\n}";
+        $value = !is_bool($value) ? $value : boolToString($value);
+        $state = $item['state'];
+        switch ($state) {
+            case 'unchanged':
+                return "{$key}: {$value}";
+                break;
+            case 'changed':
+                return "+ {$key}: {$value['before']}\n  - {$key}: {$value['after']}";
+                break;
+            case 'deleted':
+                return "- {$key}: {$value}";
+                break;
+            case 'added':
+                return "+ {$key}: {$value}";
+        }
+    }, $keysWithStates);
+    $diff = implode("\n  ", $diff);
+    $diff = "{\n    {$diff}\n}";
     return $diff;
 }
 
-
-function getMapData($data)
+function getStates($data1, $data2)
 {
-    $mapping = array_map(function ($key, $value) {
-        if ($value === true) {
-            $value = 'true';
+    $keys1 = array_keys($data1);
+    $keys2 = array_keys($data2);
+    $unionKeys = array_values(union($keys1, $keys2));
+    $statesOfKeys = array_map(function ($key) use ($data1, $data2) {
+        if (isUnchadged($data1, $data2, $key)) {
+            return ['key' => $key,
+                    'value' => $data1[$key],
+                    'state' => 'unchanged'];
         }
-        if ($value === false) {
-            $value = 'false';
+        if (isChanged($data1, $data2, $key)) {
+            return ['key' => $key,
+                    'value' => ['before' => $data1[$key], 'after' => $data2[$key]],
+                    'state' => 'changed'];
         }
-        return ['key' => $key, 'value' => $value];
-    }, array_keys($data), $data);
+        if (isDeleted($data1, $data2, $key)) {
+            return ['key' => $key,
+                    'value' => $data1[$key],
+                    'state' => 'deleted'];
+        }
+        if (isAdded($data1, $data2, $key)) {
+            return ['key' => $key,
+                    'value' => $data2[$key],
+                    'state' => 'added'];
+        }
+    }, $unionKeys);
 
-    return $mapping;
+    return $statesOfKeys;
 }
 
-function getChangedKeys($data1, $data2)
+function isUnchadged($data1, $data2, $key)
 {
-    $changedKeys1 = array_filter($data1, function ($value, $key) use ($data2) {
-        return array_key_exists($key, $data2) && $value !== $data2[$key];
-    }, ARRAY_FILTER_USE_BOTH);
-    
-    $changedKeys2 = array_filter($data2, function ($value, $key) use ($data1) {
-                return array_key_exists($key, $data1) && $value !== $data1[$key];
-    }, ARRAY_FILTER_USE_BOTH);
-
-    $changedKeys1 = getMapData($changedKeys1);
-    $changedKeys2 = getMapData($changedKeys2);
-
-    $changedKeys = array_map(function ($item1, $item2) {
-        return ['key' => $item1['key'],  'value' => [$item1['value'], $item2['value']]];
-    }, $changedKeys1, $changedKeys2);
-
-    return $changedKeys;
+    if (array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
+        if ($data1[$key] === $data2[$key]) {
+            return true;
+        }
+    }
 }
 
-function getUniqueKeys($data1, $data2)
+function isChanged($data1, $data2, $key)
 {
-    $uniqueKeys = array_filter($data1, function ($key) use ($data2) {
-                return !array_key_exists($key, $data2);
-    }, ARRAY_FILTER_USE_KEY);
-
-    return getMapData($uniqueKeys);
+    if (array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
+        if ($data1[$key] !== $data2[$key]) {
+            return true;
+        }
+    }
 }
 
-function getUnchanchedKeys($data1, $data2)
+function isDeleted($data1, $data2, $key)
 {
-    $uniqueKeys = array_filter($data1, function ($value, $key) use ($data2) {
-        return array_key_exists($key, $data2) && $value === $data2[$key];
-    }, ARRAY_FILTER_USE_BOTH);
+    if (array_key_exists($key, $data1) && !array_key_exists($key, $data2)) {
+        return true;
+    }
+}
 
-    return getMapData($uniqueKeys);
+function isAdded($data1, $data2, $key)
+{
+    if (!array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
+        return true;
+    }
+}
+
+function boolToString($string)
+{
+    if ($string === true) {
+        return 'true';
+    } elseif ($string === false) {
+        return 'false';
+    }
+    return $string;
 }
