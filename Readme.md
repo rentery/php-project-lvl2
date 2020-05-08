@@ -19,7 +19,7 @@ Enter the command `composer global require dekabruga/php-project-lvl1` to instal
 
 Enter the command in your project `composer require dekabruga/php-project-lvl1` to install 
 
-and import function `use Differ/Differ/genDiff;`
+And import function `use Differ/Differ/genDiff;`
 
 ## How it works
 
@@ -42,4 +42,4 @@ You can use `--format plain` for plain data output
 
 Finally, you can use `--format json` for json data output
 
- https://asciinema.org/a/poYvlw8btt4GONSHUdhfJ0wQp json
+[![asciicast](https://asciinema.org/a/poYvlw8btt4GONSHUdhfJ0wQp.svg)](https://asciinema.org/a/poYvlw8btt4GONSHUdhfJ0wQp)
