@@ -4,6 +4,7 @@ namespace Differ\Differ;
 
 use function Differ\Formatters\prettyFormatter;
 use function Differ\Formatters\plainFormatter;
+use function Differ\Formatters\jsonFormatter;
 use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
@@ -15,6 +16,8 @@ function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
     $treeWithStates = getStates($tree1, $tree2);
     if ($format == 'plain') {
         return plainFormatter($treeWithStates);
+    } elseif ($format == 'json') {
+        return jsonFormatter($treeWithStates);
     } else {
         return prettyFormatter($treeWithStates);
     }

@@ -15,7 +15,8 @@
             "src/Differ/gendiff.php",
             "src/Differ/parsers.php",
             "src/Formatters/PrettyFormatter.php",
-            "src/Formatters/PlainFormatter.php"
+            "src/Formatters/PlainFormatter.php",
+            "src/Formatters/jsonFormatter.php"
         ]
     },
     "scripts": {
