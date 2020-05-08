@@ -14,8 +14,7 @@ function parseData($pathToFile)
 
 function getFilePath($path)
 {
-    $explodedPath = explode('/', $path);
-    if (isset($explodedPath[1]) && $explodedPath[1] == 'home') {
+    if (substr($path, 0, 5) == '/home') {
         return $path;
     }
     $pwd = $_SERVER['PWD'];
@@ -25,13 +24,11 @@ function getFilePath($path)
 
 function startParse($filePath)
 {
-    $explodedFilePath = explode('.', $filePath);
-    $lastElement = count($explodedFilePath) - 1;
-    $extension = $explodedFilePath[$lastElement];
+    $extension = substr($filePath, -4);
     if ($extension === 'json') {
         return jsonParser($filePath);
     }
-    if ($extension === 'yaml' || $extension === 'yml') {
+    if ($extension === 'yaml') {
         return yamlParser($filePath);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Differ\Formatters;
 
-function jsonFormatter($diff)
+function jsonFormatter($configTree)
 {
-    $res = json_encode($diff);
-    return $res;
+    $jsonTree = json_encode($configTree);
+    return $jsonTree;
 }

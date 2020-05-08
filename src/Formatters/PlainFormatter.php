@@ -5,10 +5,10 @@ namespace Differ\Formatters;
 use function Funct\Collection\compact;
 use function Funct\Collection\flattenAll;
 
-function plainFormatter($diff, $spaces = '  ')
+function plainFormatter($configTree)
 {
-    $res = plainRenderer($diff);
-    return plainStringify($res);
+    $renderedConfigTree = plainRenderer($configTree);
+    return plainStringify($renderedConfigTree);
 }
 
 function plainRenderer($tree, $mainKey = '')
@@ -36,17 +36,18 @@ function plainRenderer($tree, $mainKey = '')
                 return "Property '{$mainKey}{$key}' was removed";
             case 'added':
                 return "Property '{$mainKey}{$key}' was added with value: '{$value}'";
+            default:
+                throw new \Exception('Unknown state: {$state}');
         }
     }, $tree);
     return $render;
 }
 
-function plainStringify($res)
+function plainStringify($renderedConfigTree)
 {
-    $res = flattenAll($res);
-    $res = compact($res);
-    $res = implode("\n", $res);
-    return $res;
+    $flattenTree = compact(flattenAll($renderedConfigTree));
+    $diffString = implode("\n", $flattenTree);
+    return $diffString;
 }
 
 function boolToString($string)

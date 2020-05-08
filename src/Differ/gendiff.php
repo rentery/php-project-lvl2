@@ -9,11 +9,11 @@ use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
 {
-    $data1 = parseData($pathToFile1);
-    $data2 = parseData($pathToFile2);
-    $tree1 = getAst($data1);
-    $tree2 = getAst($data2);
-    $treeWithStates = getStates($tree1, $tree2);
+    $config1 = parseData($pathToFile1);
+    $config2 = parseData($pathToFile2);
+    $configTree1 = getAst($config1);
+    $configTree2 = getAst($config2);
+    $treeWithStates = getStates($configTree1, $configTree2);
     if ($format == 'plain') {
         return plainFormatter($treeWithStates);
     } elseif ($format == 'json') {
@@ -23,29 +23,29 @@ function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
     }
 }
 
-function getAst($data)
+function getAst($config)
 {
-    $data = get_object_vars($data);
-    $keys = array_keys($data);
-    $a = array_combine($keys, array_map(function ($key) use ($data) {
-        if (is_object($data[$key])) {
-            return ['children' => getAst($data[$key])];
+    $node = get_object_vars($config);
+    $nodeKeys = array_keys($node);
+    $tree = array_combine($nodeKeys, array_map(function ($key) use ($node) {
+        if (is_object($node[$key])) {
+            return ['children' => getAst($node[$key])];
         }
-        return $data[$key];
-    }, $keys));
+        return $node[$key];
+    }, $nodeKeys));
 
-    return $a;
+    return $tree;
 }
 
-function getStates($data1, $data2)
+function getStates($config1, $config2)
 {
-    $keys1 = array_keys($data1);
-    $keys2 = array_keys($data2);
-    $unionKeys = array_values(union($keys1, $keys2));
+    $configKeys1 = array_keys($config1);
+    $configKeys2 = array_keys($config2);
+    $unionKeys = array_values(union($configKeys1, $configKeys2));
     sort($unionKeys);
-    $statesOfKeys = array_map(function ($key) use ($data1, $data2) {
-        $children1 = $data1[$key]['children'] ?? null;
-        $children2 = $data2[$key]['children'] ?? null;
+    $statesOfKeys = array_map(function ($key) use ($config1, $config2) {
+        $children1 = $config1[$key]['children'] ?? null;
+        $children2 = $config2[$key]['children'] ?? null;
         if ($children1 && $children2) {
             return ['key' => $key,
                     'children' => getStates($children1, $children2),
@@ -59,65 +59,65 @@ function getStates($data1, $data2)
             $value = 'value';
         }
         
-        if (isUnchadged($data1, $data2, $key)) {
-            $res = ['key' => $key,
-                    $value => $data1[$key],
+        if (isUnchadged($config1, $config2, $key)) {
+            $state = ['key' => $key,
+                    $value => $config1[$key],
                     'state' => 'unchanged'];
-            return isset($type) ? array_merge($res, $type) : $res;
+            return isset($type) ? array_merge($state, $type) : $state;
         }
-        if (isChanged($data1, $data2, $key)) {
-            $res = ['key' => $key,
-                    $value => ['before' => $data1[$key], 'after' => $data2[$key]],
+        if (isChanged($config1, $config2, $key)) {
+            $state = ['key' => $key,
+                    $value => ['before' => $config1[$key], 'after' => $config2[$key]],
                     'state' => 'changed'];
-                    return isset($type) ? array_merge($res, $type) : $res;
+                    return isset($type) ? array_merge($state, $type) : $state;
         }
-        if (isDeleted($data1, $data2, $key)) {
-            $res = ['key' => $key,
+        if (isDeleted($config1, $config2, $key)) {
+            $state = ['key' => $key,
                     $value => $children1 ? ['key' => key($children1), 'value' => $children1[key($children1)]]
-                                        : $data1[$key],
+                                        : $config1[$key],
                     'state' => 'deleted'];
-                    return isset($type) ? array_merge($res, $type) : $res;
+                    return isset($type) ? array_merge($state, $type) : $state;
         }
-        if (isAdded($data1, $data2, $key)) {
-            $res = ['key' => $key,
+        if (isAdded($config1, $config2, $key)) {
+            $state = ['key' => $key,
                     $value => $children2 ? ['key' => key($children2), 'value' => $children2[key($children2)]]
-                                        : $data2[$key],
+                                        : $config2[$key],
                     'state' => 'added'];
-                    return isset($type) ? array_merge($res, $type) : $res;
+                    return isset($type) ? array_merge($state, $type) : $state;
         }
     }, $unionKeys);
 
     return $statesOfKeys;
 }
 
-function isUnchadged($data1, $data2, $key)
+function isUnchadged($config1, $config2, $key)
 {
-    if (array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
-        if ($data1[$key] === $data2[$key]) {
+    if (array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
+        if ($config1[$key] === $config2[$key]) {
             return true;
         }
     }
 }
 
-function isChanged($data1, $data2, $key)
+function isChanged($config1, $config2, $key)
 {
-    if (array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
-        if ($data1[$key] !== $data2[$key]) {
+    if (array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
+        if ($config1[$key] !== $config2[$key]) {
             return true;
         }
     }
 }
 
-function isDeleted($data1, $data2, $key)
+function isDeleted($config1, $config2, $key)
 {
-    if (array_key_exists($key, $data1) && !array_key_exists($key, $data2)) {
+    if (array_key_exists($key, $config1) && !array_key_exists($key, $config2)) {
         return true;
     }
 }
 
-function isAdded($data1, $data2, $key)
+function isAdded($config1, $config2, $key)
 {
-    if (!array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
+    if (!array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
         return true;
     }
 }

@@ -2,10 +2,10 @@
 
 namespace Differ\Formatters;
 
-function prettyFormatter($diff)
+function prettyFormatter($configTree)
 {
-    $res = prettyRenderer($diff);
-    return "{\n" . prettyStringify($res) . "\n}";
+    $renderedConfigTree = prettyRenderer($configTree);
+    return "{\n" . prettyStringify($renderedConfigTree) . "\n}";
 }
 
 function prettyRenderer($tree)
@@ -33,13 +33,15 @@ function prettyRenderer($tree)
                 return "- {$key}: {$value}";
             case 'added':
                 return "+ {$key}: {$value}";
+            default:
+                throw new \Exception('Unknown state: {$state}');
         }
     }, $tree);
 
     return $render;
 }
 
-function prettyStringify($diff, $spaces = '  ')
+function prettyStringify($renderedConfigTree, $spaces = '  ')
 {
     $diff = array_map(function ($item) use ($spaces) {
         if (is_array($item)) {
@@ -50,8 +52,8 @@ function prettyStringify($diff, $spaces = '  ')
         $item = str_replace("{", "{\n{$spaces}      ", $item);
         $item = str_replace("}", "\n{$spaces}  }", $item);
         return "{$spaces}{$item}";
-    }, $diff);
+    }, $renderedConfigTree);
 
-    $res = implode("\n", $diff);
-    return $res;
+    $diffString = implode("\n", $diff);
+    return $diffString;
 }
