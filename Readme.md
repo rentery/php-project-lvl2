@@ -1,7 +1,7 @@
 ### Gendiff
 Gendiff is a utility for comparing two configuration files.
 Supported formats: json, yaml.
-The result of comparing can be displayed in different formats: for example, plain or json.
+The result of comparing can be displayed in different formats: pretty, plain or json.
 
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/98ea2f7eb7f6a4613086/maintainability)](https://codeclimate.com/github/rentery/php-project-lvl2/maintainability)
@@ -13,7 +13,9 @@ The result of comparing can be displayed in different formats: for example, plai
 ## How to install
 1. Installation with composer as a cli utility:
 
-Enter the command `composer global require dekabruga/php-project-lvl1` to install Brain-games
+Enter the command `composer global require dekabruga/php-project-lvl1` to install
+
+Use command `gendiff [--format <fmt>] <firstFile> <secondFile>` for compare files
 
 2. You also can use this utility as library:
 
@@ -34,7 +36,6 @@ You can compare two yaml config files with plain structure
 You can compare two yaml or json config files with nested structure
 
 [![asciicast](https://asciinema.org/a/oyRa2QjXCJ0hH1sG1pXUWOm4T.svg)](https://asciinema.org/a/oyRa2QjXCJ0hH1sG1pXUWOm4T)
-
 
 You can use `--format plain` for plain data output
 
