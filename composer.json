@@ -11,9 +11,11 @@
     ],
     "autoload": {
         "files": [
-            "src/engine.php",
+            "src/Engine.php",
             "src/Differ/gendiff.php",
-            "src/Differ/parsers.php"
+            "src/Differ/parsers.php",
+            "src/Formatters/PrettyFormatter.php",
+            "src/Formatters/PlainFormatter.php"
         ]
     },
     "scripts": {

@@ -2,21 +2,22 @@
 
 namespace Differ\Differ;
 
+use function Differ\Formatters\prettyFormatter;
+use function Differ\Formatters\plainFormatter;
 use function Funct\Collection\union;
-use function Funct\Collection\flatten;
-use function Funct\Collection\flattenAll;
-use function Funct\Collection\zip;
 
-function genDiff($pathToFile1, $pathToFile2)
+function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
 {
     $data1 = parseData($pathToFile1);
     $data2 = parseData($pathToFile2);
-    $data1 = getAst($data1);
-    $data2 = getAst($data2);
-    $astWithStates = getStates($data1, $data2);
-    $renderedData = diffRenderer($astWithStates);
-    $res = "{\n" . stringify($renderedData) . "\n}";
-    return $res;
+    $tree1 = getAst($data1);
+    $tree2 = getAst($data2);
+    $treeWithStates = getStates($tree1, $tree2);
+    if ($format == 'plain') {
+        return plainFormatter($treeWithStates);
+    } else {
+        return prettyFormatter($treeWithStates);
+    }
 }
 
 function getAst($data)
@@ -33,39 +34,6 @@ function getAst($data)
     return $a;
 }
 
-
-function diffRenderer($tree)
-{
-    $render = array_map(function ($item) {
-        $type = $item['type'] ?? null;
-        $state = $item['state'] ?? null;
-        $key = $item['key'];
-        if ($type && !$state) {
-            return [$item['key'] => diffRenderer($item['children'])];
-        }
-        
-        if (isset($item['children'])) {
-            $value = "{{$item['children']['key']}: {$item['children']['value']}}";
-        } else {
-            $value = $item['value'];
-        }
-        $value = is_bool($value) ? boolToString($value) : $value;
-        switch ($state) {
-            case 'unchanged':
-                return "  {$key}: {$value}";
-            case 'changed':
-                return "+ {$key}: {$value['after']}\n- {$key}: {$value['before']}";
-            case 'deleted':
-                return "- {$key}: {$value}";
-            case 'added':
-                return "+ {$key}: {$value}";
-        }
-    }, $tree);
-
-    return $render;
-}
-
-
 function getStates($data1, $data2)
 {
     $keys1 = array_keys($data1);
@@ -73,21 +41,20 @@ function getStates($data1, $data2)
     $unionKeys = array_values(union($keys1, $keys2));
     sort($unionKeys);
     $statesOfKeys = array_map(function ($key) use ($data1, $data2) {
-        $children1 = $data1[$key]['children'] ?? false;
-        $children2 = $data2[$key]['children'] ?? false;
+        $children1 = $data1[$key]['children'] ?? null;
+        $children2 = $data2[$key]['children'] ?? null;
         if ($children1 && $children2) {
             return ['key' => $key,
                     'children' => getStates($children1, $children2),
-                    'type' => 'nested'];
+                    'type' => 'node'];
         }
         
         if ($children1 || $children2) {
             $value = 'children';
-            $type = ['type' => 'nested'];
+            $type = ['type' => 'node'];
         } else {
             $value = 'value';
         }
-
         
         if (isUnchadged($data1, $data2, $key)) {
             $res = ['key' => $key,
@@ -120,22 +87,6 @@ function getStates($data1, $data2)
     return $statesOfKeys;
 }
 
-function stringify($diff, $spaces = '  ')
-{
-    $diff = array_map(function ($item) use ($spaces) {
-        if (is_array($item)) {
-            $key = key($item);
-            return "  {$spaces}{$key}: {\n" . stringify($item[$key], $spaces = "{$spaces}    ") . "\n    }";
-        }
-        $item = str_replace("\n-", "\n{$spaces}-", $item);
-        $item = str_replace("{", "{\n{$spaces}      ", $item);
-        $item = str_replace("}", "\n{$spaces}  }", $item);
-        return "{$spaces}{$item}";
-    }, $diff);
-    $res = implode("\n", $diff);
-    return $res;
-}
-
 function isUnchadged($data1, $data2, $key)
 {
     if (array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
@@ -166,15 +117,4 @@ function isAdded($data1, $data2, $key)
     if (!array_key_exists($key, $data1) && array_key_exists($key, $data2)) {
         return true;
     }
-}
-
-
-function boolToString($string)
-{
-    if ($string === true) {
-        return 'true';
-    } elseif ($string === false) {
-        return 'false';
-    }
-    return $string;
 }

@@ -70,4 +70,21 @@ DOC;
         $this->assertEquals($expected, $json);
         $this->assertEquals($expected, $yaml);
     }
+
+    public function testPlainFormatter()
+    {
+        $json = genDiff("{$this->path}/beforeRecursive.json", "{$this->path}/afterRecursive.json", 'plain');
+        $yaml = genDiff("{$this->path}/firstRecursive.yaml", "{$this->path}/secondRecursive.yaml", 'plain');
+        $expected = <<<DOC
+Property 'common.setting2' was removed
+Property 'common.setting4' was added with value: 'blah blah'
+Property 'common.setting5' was added with value: 'complex value'
+Property 'common.setting6' was removed
+Property 'group1.baz' was changed. From 'bas' to 'bars'
+Property 'group2' was removed
+Property 'group3' was added with value: 'complex value'
+DOC;
+        $this->assertEquals($expected, $json);
+        $this->assertEquals($expected, $yaml);
+    }
 }
