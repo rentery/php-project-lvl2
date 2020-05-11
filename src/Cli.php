@@ -1,6 +1,8 @@
 <?php
 
-namespace Differ;
+namespace Differ\Cli;
+
+use function Differ\Differ\genDiff;
 
 function run()
 {
@@ -23,5 +25,5 @@ DOC;
     $firstFilePath = $args['<firstFile>'];
     $secondFilePath = $args['<secondFile>'];
     $format = $args['--format'];
-    print_r(Differ\genDiff($firstFilePath, $secondFilePath, $format));
+    print_r(genDiff($firstFilePath, $secondFilePath, $format));
 }

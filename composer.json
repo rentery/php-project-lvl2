@@ -11,12 +11,12 @@
     ],
     "autoload": {
         "files": [
-            "src/Engine.php",
-            "src/Differ/gendiff.php",
-            "src/Differ/parsers.php",
+            "src/Cli.php",
+            "src/gendiff.php",
+            "src/parsers.php",
             "src/Formatters/PrettyFormatter.php",
             "src/Formatters/PlainFormatter.php",
-            "src/Formatters/jsonFormatter.php"
+            "src/Formatters/JsonFormatter.php"
         ]
     },
     "scripts": {
