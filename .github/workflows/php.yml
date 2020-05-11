@@ -40,4 +40,4 @@ jobs:
         with:
           coverageCommand: make test
           debug: true
-          coverage-input-type: clover
+          format-coverage: clover
