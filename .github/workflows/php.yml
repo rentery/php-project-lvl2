@@ -36,7 +36,7 @@ jobs:
         uses: paambaati/codeclimate-action@v2.4.0
         # Add Code Climate secret key
         env:
-          CC_TEST_REPORTER_ID: 9485374a9454e9d323a4781a30c4a0acf322042cffe1f22e471b06d2276c8288
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
           coverageCommand: make test
           debug: true
