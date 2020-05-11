@@ -40,4 +40,4 @@ jobs:
         with:
           coverageCommand: make test
           debug: true
-          cc-test-reporter after-build: --coverage-input-type clover
+          after_script: ./cc-test-reporter format-coverage -t clover
