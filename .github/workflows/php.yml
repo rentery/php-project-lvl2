@@ -40,3 +40,4 @@ jobs:
         with:
           coverageCommand: make test
           debug: true
+          after_script: ./cc-test-reporter after-build -t --clover
