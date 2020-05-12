@@ -40,5 +40,4 @@ jobs:
         with:
           coverageCommand: make test
           debug: true
-        after-script: 
-          format-coverage: -t clover
+          coverageLocations: ${{github.workspace}}/build/logs/clover.xml:clover
