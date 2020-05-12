@@ -41,4 +41,4 @@ jobs:
           coverageCommand: make test
           debug: true
           coverageLocations: |
-            ${{github.workspace}}/build/logs/clover.xml:clover
+            /home/runner/work/php-project-lvl2/build/logs/clover.xml:clover
