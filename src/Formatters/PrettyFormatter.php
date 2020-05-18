@@ -4,26 +4,30 @@ namespace Differ\Formatters;
 
 function prettyFormatter($configTree)
 {
-    $renderedConfigTree = prettyRenderer($configTree);
+    $renderedConfigTree = prettyRender($configTree);
     return "{\n" . prettyStringify($renderedConfigTree) . "\n}";
 }
 
-function prettyRenderer($tree)
+function prettyRender($tree)
 {
     $render = array_map(function ($item) {
         $type = $item['type'] ?? null;
         $state = $item['state'] ?? null;
         $key = $item['key'];
+        
         if ($type && !$state) {
-            return [$item['key'] => prettyRenderer($item['children'])];
+            return [$item['key'] => prettyRender($item['children'])];
         }
         
-        if (isset($item['children'])) {
-            $value = "{{$item['children']['key']}: {$item['children']['value']}}";
-        } else {
-            $value = $item['value'];
+        $value = $item['value'];
+
+        if (is_object($value)) {
+            $data = get_object_vars($value);
+            $objectKey = key($data);
+            $value = "{{$objectKey}: {$data[$objectKey]}}";
         }
         $value = is_bool($value) ? boolToString($value) : $value;
+
         switch ($state) {
             case 'unchanged':
                 return "  {$key}: {$value}";

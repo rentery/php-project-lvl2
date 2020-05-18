@@ -21,7 +21,7 @@ function plainRenderer($tree, $mainKey = '')
             return [plainRenderer($item['children'], "{$item['key']}.")];
         }
         
-        if (isset($item['children'])) {
+        if (is_object($item['value'])) {
             $value = "complex value";
         } else {
             $value = $item['value'];

@@ -11,83 +11,57 @@ function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
 {
     $config1 = parseData($pathToFile1);
     $config2 = parseData($pathToFile2);
-    $configTree1 = getAst($config1);
-    $configTree2 = getAst($config2);
-    $treeWithStates = getStates($configTree1, $configTree2);
+    $diffTree = getAst($config1, $config2);
     if ($format == 'plain') {
-        return plainFormatter($treeWithStates);
+        return plainFormatter($diffTree);
     } elseif ($format == 'json') {
-        return jsonFormatter($treeWithStates);
+        return jsonFormatter($diffTree);
     } else {
-        return prettyFormatter($treeWithStates);
+        return prettyFormatter($diffTree);
     }
 }
 
-function getAst($config)
+function getAst($config1, $config2)
 {
-    $node = get_object_vars($config);
-    $nodeKeys = array_keys($node);
-    $tree = array_combine($nodeKeys, array_map(function ($key) use ($node) {
-        if (is_object($node[$key])) {
-            return ['children' => getAst($node[$key])];
-        }
-        return $node[$key];
-    }, $nodeKeys));
-
-    return $tree;
-}
-
-function getStates($config1, $config2)
-{
+    $config1 = get_object_vars($config1);
+    $config2 = get_object_vars($config2);
     $configKeys1 = array_keys($config1);
     $configKeys2 = array_keys($config2);
-    $unionKeys = array_values(union($configKeys1, $configKeys2));
+    $unionKeys = union($configKeys1, $configKeys2);
     sort($unionKeys);
-    $statesOfKeys = array_map(function ($key) use ($config1, $config2) {
-        $children1 = $config1[$key]['children'] ?? null;
-        $children2 = $config2[$key]['children'] ?? null;
-        if ($children1 && $children2) {
+    $diffTree = array_map(function ($key) use ($config1, $config2) {
+        $value1 = $config1[$key] ?? null;
+        $value2 = $config2[$key] ?? null;
+
+        if (is_object($value1) && is_object($value2)) {
             return ['key' => $key,
-                    'children' => getStates($children1, $children2),
+                    'children' => getAst($value1, $value2),
                     'type' => 'node'];
         }
         
-        if ($children1 || $children2) {
-            $value = 'children';
-            $type = ['type' => 'node'];
-        } else {
-            $value = 'value';
-        }
-        
         if (isUnchadged($config1, $config2, $key)) {
-            $state = ['key' => $key,
-                    $value => $config1[$key],
+            return ['key' => $key,
+                    'value' => $value1,
                     'state' => 'unchanged'];
-            return isset($type) ? array_merge($state, $type) : $state;
         }
         if (isChanged($config1, $config2, $key)) {
-            $state = ['key' => $key,
-                    $value => ['before' => $config1[$key], 'after' => $config2[$key]],
+            return ['key' => $key,
+                    'value' => ['before' => $value1, 'after' => $value2],
                     'state' => 'changed'];
-                    return isset($type) ? array_merge($state, $type) : $state;
         }
         if (isDeleted($config1, $config2, $key)) {
-            $state = ['key' => $key,
-                    $value => $children1 ? ['key' => key($children1), 'value' => $children1[key($children1)]]
-                                        : $config1[$key],
+            return ['key' => $key,
+                    'value' => $value1,
                     'state' => 'deleted'];
-                    return isset($type) ? array_merge($state, $type) : $state;
         }
         if (isAdded($config1, $config2, $key)) {
-            $state = ['key' => $key,
-                    $value => $children2 ? ['key' => key($children2), 'value' => $children2[key($children2)]]
-                                        : $config2[$key],
+            return ['key' => $key,
+                    'value' => $value2,
                     'state' => 'added'];
-                    return isset($type) ? array_merge($state, $type) : $state;
         }
     }, $unionKeys);
 
-    return $statesOfKeys;
+    return $diffTree;
 }
 
 function isUnchadged($config1, $config2, $key)
