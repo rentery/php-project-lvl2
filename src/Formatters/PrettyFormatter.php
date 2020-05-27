@@ -4,35 +4,38 @@ namespace Differ\Formatters;
 
 function prettyFormatter($configTree)
 {
-    $renderedConfigTree = prettyRender($configTree);
+    $renderedConfigTree = prettyRenderer($configTree);
     return "{\n" . prettyStringify($renderedConfigTree) . "\n}";
 }
 
-function prettyRender($tree)
+
+function prettyRenderer($tree)
 {
-    $render = array_map(function ($item) {
-        $type = $item['type'] ?? null;
-        $state = $item['state'] ?? null;
-        $key = $item['key'];
+    $renderedTree = array_map(function ($node) {
+        $type = $node['type'];
+        $key = $node['key'];
         
-        if ($type && !$state) {
-            return [$item['key'] => prettyRender($item['children'])];
+        if ($type == 'node') {
+            return [$key => prettyRenderer($node['children'])];
         }
-        
-        $value = $item['value'];
 
-        if (is_object($value)) {
-            $data = get_object_vars($value);
+        if ($type == 'changed') {
+            $oldValue = is_bool($node['oldValue']) ? json_encode($node['oldValue']) : $node['oldValue'];
+            $newValue = is_bool($node['newValue']) ? json_encode($node['newValue']) : $node['newValue'];
+            return "+ {$key}: {$newValue}\n- {$key}: {$oldValue}";
+        }
+
+        if (is_object($node['value'])) {
+            $data = get_object_vars($node['value']);
             $objectKey = key($data);
-            $value = "{{$objectKey}: {$data[$objectKey]}}";
+            $node['value'] = "{{$objectKey}: {$data[$objectKey]}}";
         }
-        $value = is_bool($value) ? boolToString($value) : $value;
 
-        switch ($state) {
+        $value = is_bool($node['value']) ? json_encode($node['value']) : $node['value'];
+
+        switch ($type) {
             case 'unchanged':
                 return "  {$key}: {$value}";
-            case 'changed':
-                return "+ {$key}: {$value['after']}\n- {$key}: {$value['before']}";
             case 'deleted':
                 return "- {$key}: {$value}";
             case 'added':
@@ -42,7 +45,7 @@ function prettyRender($tree)
         }
     }, $tree);
 
-    return $render;
+    return $renderedTree;
 }
 
 function prettyStringify($renderedConfigTree, $spaces = '  ')

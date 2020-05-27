@@ -9,12 +9,20 @@ use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
 {
-    $config1 = parseData($pathToFile1);
-    $config2 = parseData($pathToFile2);
+    $pathToConfig1 = getFilePath($pathToFile1);
+    $pathToConfig2 = getFilePath($pathToFile2);
+
+    $rawConfig1 = file_get_contents($pathToConfig1);
+    $rawConfig2 = file_get_contents($pathToConfig2);
+
+    $config1 = parseData($rawConfig1, $pathToConfig1);
+    $config2 = parseData($rawConfig2, $pathToConfig2);
+
     $diffTree = getAst($config1, $config2);
-    if ($format == 'plain') {
+    
+    if ($format === 'plain') {
         return plainFormatter($diffTree);
-    } elseif ($format == 'json') {
+    } elseif ($format === 'json') {
         return jsonFormatter($diffTree);
     } else {
         return prettyFormatter($diffTree);
@@ -30,68 +38,34 @@ function getAst($config1, $config2)
     $unionKeys = union($configKeys1, $configKeys2);
     sort($unionKeys);
     $diffTree = array_map(function ($key) use ($config1, $config2) {
-        $value1 = $config1[$key] ?? null;
-        $value2 = $config2[$key] ?? null;
 
-        if (is_object($value1) && is_object($value2)) {
+        if (array_key_exists($key, $config1) && !array_key_exists($key, $config2)) {
             return ['key' => $key,
-                    'children' => getAst($value1, $value2),
-                    'type' => 'node'];
+                    'value' => $config1[$key],
+                    'type' => 'deleted'];
         }
-        
-        if (isUnchadged($config1, $config2, $key)) {
+        if (!array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
             return ['key' => $key,
-                    'value' => $value1,
-                    'state' => 'unchanged'];
+                    'value' => $config2[$key],
+                    'type' => 'added'];
         }
-        if (isChanged($config1, $config2, $key)) {
-            return ['key' => $key,
-                    'value' => ['before' => $value1, 'after' => $value2],
-                    'state' => 'changed'];
+        if (is_object($config1[$key]) && is_object($config2[$key])) {
+                return ['key' => $key,
+                        'children' => getAst($config1[$key], $config2[$key]),
+                        'type' => 'node'];
         }
-        if (isDeleted($config1, $config2, $key)) {
-            return ['key' => $key,
-                    'value' => $value1,
-                    'state' => 'deleted'];
+        if ($config1[$key] === $config2[$key]) {
+                return ['key' => $key,
+                        'value' => $config1[$key],
+                        'type' => 'unchanged'];
         }
-        if (isAdded($config1, $config2, $key)) {
-            return ['key' => $key,
-                    'value' => $value2,
-                    'state' => 'added'];
+        if ($config1[$key] !== $config2[$key]) {
+                return ['key' => $key,
+                        'oldValue' => $config1[$key],
+                        'newValue' => $config2[$key],
+                        'type' => 'changed'];
         }
     }, $unionKeys);
 
     return $diffTree;
-}
-
-function isUnchadged($config1, $config2, $key)
-{
-    if (array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
-        if ($config1[$key] === $config2[$key]) {
-            return true;
-        }
-    }
-}
-
-function isChanged($config1, $config2, $key)
-{
-    if (array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
-        if ($config1[$key] !== $config2[$key]) {
-            return true;
-        }
-    }
-}
-
-function isDeleted($config1, $config2, $key)
-{
-    if (array_key_exists($key, $config1) && !array_key_exists($key, $config2)) {
-        return true;
-    }
-}
-
-function isAdded($config1, $config2, $key)
-{
-    if (!array_key_exists($key, $config1) && array_key_exists($key, $config2)) {
-        return true;
-    }
 }

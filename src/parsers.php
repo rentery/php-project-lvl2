@@ -4,20 +4,17 @@ namespace Differ\Differ;
 
 use Symfony\Component\Yaml\Yaml;
 
-function parseData($pathToUserFile)
+function parseData($rawConfig, $pathToFile)
 {
-    $filePath = getFilePath($pathToUserFile);
-    $extension = substr($filePath, -4);
-    $rawData = file_get_contents($filePath);
+    $extension = substr($pathToFile, -4);
     switch ($extension) {
         case 'json':
-            $config = parseJson($rawData);
-            break;
+            return jsonParse($rawConfig);
         case 'yaml':
-            $config = parseYaml($rawData);
-            break;
+            return yamlParse($rawConfig);
+        default:
+            throw new \Exception("Unknown file extension: {$extension}. Use json or yaml files");
     }
-    return $config;
 }
 
 function getFilePath($path)
@@ -30,17 +27,17 @@ function getFilePath($path)
     return $path;
 }
 
-function parseJson($raw)
+function jsonParse($rawConfig)
 {
-    $data = json_decode($raw);
+    $data = json_decode($rawConfig);
     if (json_last_error() !== 0) {
         return json_last_error_msg();
     }
     return $data;
 }
 
-function parseYaml($raw)
+function yamlParse($rawConfig)
 {
-    $data = Yaml::parse($raw, Yaml::PARSE_OBJECT_FOR_MAP);
+    $data = Yaml::parse($rawConfig, Yaml::PARSE_OBJECT_FOR_MAP);
     return $data;
 }
