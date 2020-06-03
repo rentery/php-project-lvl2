@@ -8,44 +8,34 @@ function prettyFormatter($configTree)
     return "{\n" . prettyStringify($renderedConfigTree) . "\n}";
 }
 
-
 function prettyRenderer($tree)
 {
-    $renderedTree = array_map(function ($node) {
+    $renderedData = array_map(function ($node) {
         $type = $node['type'];
         $key = $node['key'];
         
-        if ($type == 'node') {
-            return [$key => prettyRenderer($node['children'])];
-        }
-
-        if ($type == 'changed') {
-            $oldValue = is_bool($node['oldValue']) ? json_encode($node['oldValue']) : $node['oldValue'];
-            $newValue = is_bool($node['newValue']) ? json_encode($node['newValue']) : $node['newValue'];
-            return "+ {$key}: {$newValue}\n- {$key}: {$oldValue}";
-        }
-
-        if (is_object($node['value'])) {
-            $data = get_object_vars($node['value']);
-            $objectKey = key($data);
-            $node['value'] = "{{$objectKey}: {$data[$objectKey]}}";
-        }
-
-        $value = is_bool($node['value']) ? json_encode($node['value']) : $node['value'];
-
         switch ($type) {
+            case 'node':
+                return [$key => prettyRenderer($node['children'])];
             case 'unchanged':
-                return "  {$key}: {$value}";
+                $value = getValue($node);
+                return "  {$key}:{$value}";
+            case 'changed':
+                $oldValue = is_bool($node['oldValue']) ? json_encode($node['oldValue']) : $node['oldValue'];
+                $newValue = is_bool($node['newValue']) ? json_encode($node['newValue']) : $node['newValue'];
+                return "+ {$key}:{$newValue}\n- {$key}:{$oldValue}";
             case 'deleted':
-                return "- {$key}: {$value}";
+                $value = getValue($node);
+                return "- {$key}:{$value}";
             case 'added':
-                return "+ {$key}: {$value}";
+                $value = getValue($node);
+                return "+ {$key}:{$value}";
             default:
-                throw new \Exception('Unknown state: {$state}');
+                throw new \Exception('Unknown type: {$type}');
         }
     }, $tree);
 
-    return $renderedTree;
+    return $renderedData;
 }
 
 function prettyStringify($renderedConfigTree, $spaces = '  ')
@@ -58,9 +48,21 @@ function prettyStringify($renderedConfigTree, $spaces = '  ')
         $item = str_replace("\n-", "\n{$spaces}-", $item);
         $item = str_replace("{", "{\n{$spaces}      ", $item);
         $item = str_replace("}", "\n{$spaces}  }", $item);
+        $item = str_replace("\"", "", $item);
+        $item = str_replace(":", ": ", $item);
         return "{$spaces}{$item}";
     }, $renderedConfigTree);
 
     $diffString = implode("\n", $diff);
     return $diffString;
+}
+
+function getValue($node)
+{
+    if (is_object($node['value'])) {
+        $value = json_encode($node['value']);
+    } else {
+        $value = $node['value'];
+    }
+    return is_bool($value) ? json_encode($value) : $value;
 }

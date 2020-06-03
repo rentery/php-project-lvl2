@@ -11,36 +11,29 @@ function plainFormatter($configTree)
     return plainStringify($renderedConfigTree);
 }
 
-function plainRenderer($tree, $mainKey = '')
+function plainRenderer($tree, $rootKey = '')
 {
-    $render = array_map(function ($item) use ($mainKey) {
-        $type = $item['type'];
-        $key = $item['key'];
-
-        if ($type === 'node') {
-            return [plainRenderer($item['children'], "{$item['key']}.")];
-        }
+    $render = array_map(function ($node) use ($rootKey) {
+        $type = $node['type'];
+        $key = $node['key'];
         
-        if ($type === 'changed') {
-            return "Property '{$mainKey}{$key}' was changed. From '{$item['oldValue']}' to '{$item['newValue']}'";
-        }
-
-        if (is_object($item['value'])) {
-            $value = "complex value";
-        } else {
-            $value = $item['value'];
-        }
-
-        $value = is_bool($value) ? json_encode($value) : $value;
         switch ($type) {
+            case 'node':
+                return [plainRenderer($node['children'], "{$rootKey}{$node['key']}.")];
             case 'unchanged':
                 return null;
+            case 'changed':
+                $oldValue = is_bool($node['oldValue']) ? json_encode($node['oldValue']) : $node['oldValue'];
+                $newValue = is_bool($node['newValue']) ? json_encode($node['newValue']) : $node['newValue'];
+                return "Property '{$rootKey}{$key}' was changed. From '{$oldValue}' to '{$newValue}'";
             case 'deleted':
-                return "Property '{$mainKey}{$key}' was removed";
+                return "Property '{$rootKey}{$key}' was removed";
             case 'added':
-                return "Property '{$mainKey}{$key}' was added with value: '{$value}'";
+                $value = is_object($node['value']) ? 'complex value' : $node['value'];
+                $value = is_bool($value) ? json_encode($value) : $value;
+                return "Property '{$rootKey}{$key}' was added with value: '{$value}'";
             default:
-                throw new \Exception("Unknown state: {$type}");
+                throw new \Exception("Unknown type: {$type}");
         }
     }, $tree);
     return $render;
