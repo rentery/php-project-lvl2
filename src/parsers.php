@@ -4,27 +4,16 @@ namespace Differ\Differ;
 
 use Symfony\Component\Yaml\Yaml;
 
-function parseData($rawConfig, $pathToFile)
+function parseData($rawConfig, $dataType)
 {
-    $extension = substr($pathToFile, -4);
-    switch ($extension) {
+    switch ($dataType) {
         case 'json':
             return jsonParse($rawConfig);
         case 'yaml':
             return yamlParse($rawConfig);
         default:
-            throw new \Exception("Unknown file extension: {$extension}. Use json or yaml files");
+            throw new \Exception("Unknown data type: {$dataType}. Use json or yaml data types");
     }
-}
-
-function getFilePath($path)
-{
-    if (substr($path, 0, 5) == '/home') {
-        return $path;
-    }
-    $pwd = $_SERVER['PWD'];
-    $path = "{$pwd}/{$path}";
-    return $path;
 }
 
 function jsonParse($rawConfig)
