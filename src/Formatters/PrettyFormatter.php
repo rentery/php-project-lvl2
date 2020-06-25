@@ -2,10 +2,6 @@
 
 namespace Differ\Formatters;
 
-use function Funct\Collection\flattenAll;
-use function Funct\Collection\flatten;
-use function Funct\Collection\union;
-
 function prettyFormatter($configTree)
 {
     $renderedConfigTree = prettyRenderer($configTree);
