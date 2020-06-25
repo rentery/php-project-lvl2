@@ -8,7 +8,9 @@ use function Funct\Collection\flattenAll;
 function plainFormatter($configTree)
 {
     $renderedConfigTree = plainRenderer($configTree);
-    return plainStringify($renderedConfigTree);
+    $flattenTree = compact(flattenAll($renderedConfigTree));
+    $diff = implode("\n", $flattenTree);
+    return $diff;
 }
 
 function plainRenderer($tree, $rootKey = '')
@@ -23,14 +25,13 @@ function plainRenderer($tree, $rootKey = '')
             case 'unchanged':
                 return null;
             case 'changed':
-                $oldValue = is_bool($node['oldValue']) ? json_encode($node['oldValue']) : $node['oldValue'];
-                $newValue = is_bool($node['newValue']) ? json_encode($node['newValue']) : $node['newValue'];
+                $oldValue = plainStringify($node['oldValue']);
+                $newValue = plainStringify($node['newValue']);
                 return "Property '{$rootKey}{$key}' was changed. From '{$oldValue}' to '{$newValue}'";
             case 'deleted':
                 return "Property '{$rootKey}{$key}' was removed";
             case 'added':
-                $value = is_object($node['value']) ? 'complex value' : $node['value'];
-                $value = is_bool($value) ? json_encode($value) : $value;
+                $value = plainStringify($node['value']);
                 return "Property '{$rootKey}{$key}' was added with value: '{$value}'";
             default:
                 throw new \Exception("Unknown type: {$type}");
@@ -39,9 +40,12 @@ function plainRenderer($tree, $rootKey = '')
     return $render;
 }
 
-function plainStringify($renderedConfigTree)
+
+function plainStringify($item)
 {
-    $flattenTree = compact(flattenAll($renderedConfigTree));
-    $diffString = implode("\n", $flattenTree);
-    return $diffString;
+    if (is_object($item)) {
+        return "complex value";
+    }
+    $value = json_encode($item);
+    return str_replace('"', "", $value);
 }
