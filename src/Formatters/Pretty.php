@@ -1,19 +1,12 @@
 <?php
 
-namespace Differ\Formatters;
+namespace Differ\Formatters\Pretty;
 
 const COUNT_OF_SPACES_UNCHANGED_CASE = 4;
 const COUNT_OF_SPACES_OTHER_CASES = 2;
 
-function prettyFormatter($configTree)
+function render($tree)
 {
-    $renderedConfigTree = prettyRenderer($configTree);
-    return "{\n" . $renderedConfigTree . "\n}";
-}
-
-function prettyRenderer($tree)
-{
-
     $iter = function ($tree, $depth = 1) use (&$iter) {
         $renderedData = array_map(function ($node) use ($iter, $depth) {
             $type = $node['type'];
@@ -25,17 +18,17 @@ function prettyRenderer($tree)
                 case 'node':
                     return "{$indent}{$node['key']}: {\n" . $iter($node['children'], $depth + 1) . "\n    }";
                 case 'unchanged':
-                    $value = prettyStringify($node['value'], $indent);
+                    $value = stringify($node['value'], $indent);
                     return "{$indent}{$key}: {$value}";
                 case 'changed':
-                    $oldValue = prettyStringify($node['oldValue']);
-                    $newValue = prettyStringify($node['newValue']);
+                    $oldValue = stringify($node['oldValue']);
+                    $newValue = stringify($node['newValue']);
                     return "{$indentSmall}+ {$key}: {$newValue}\n{$indentSmall}- {$key}: {$oldValue}";
                 case 'deleted':
-                    $value = prettyStringify($node['value'], $indent);
+                    $value = stringify($node['value'], $indent);
                     return "{$indentSmall}- {$key}: {$value}";
                 case 'added':
-                    $value = prettyStringify($node['value'], $indent);
+                    $value = stringify($node['value'], $indent);
                     return "{$indentSmall}+ {$key}: {$value}";
                 default:
                     throw new \Exception('Unknown type: {$type}');
@@ -46,10 +39,10 @@ function prettyRenderer($tree)
     };
 
     $renderedData = $iter($tree);
-    return $renderedData;
+    return "{\n" . $renderedData . "\n}";
 }
 
-function prettyStringify($item, $indent = '')
+function stringify($item, $indent = '')
 {
     $value = json_encode($item);
     $indentLeft = str_repeat(' ', strlen($indent) + COUNT_OF_SPACES_UNCHANGED_CASE);

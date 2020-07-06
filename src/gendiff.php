@@ -2,9 +2,10 @@
 
 namespace Differ\Differ;
 
-use function Differ\Formatters\prettyFormatter;
-use function Differ\Formatters\plainFormatter;
-use function Differ\Formatters\jsonFormatter;
+use Differ\Formatters\Pretty;
+use Differ\Formatters\Plain;
+use Differ\Formatters\Json;
+
 use function Funct\Collection\union;
 
 function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
@@ -22,11 +23,11 @@ function genDiff($pathToFile1, $pathToFile2, $format = 'pretty')
 
     switch ($format) {
         case 'plain':
-            return plainFormatter($diffTree);
+            return Plain\render($diffTree);
         case 'json':
-            return jsonFormatter($diffTree);
+            return Json\render($diffTree);
         default:
-            return prettyFormatter($diffTree);
+            return Pretty\render($diffTree);
     }
 }
 

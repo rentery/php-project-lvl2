@@ -14,9 +14,9 @@
             "src/Cli.php",
             "src/gendiff.php",
             "src/parsers.php",
-            "src/Formatters/PrettyFormatter.php",
-            "src/Formatters/PlainFormatter.php",
-            "src/Formatters/JsonFormatter.php"
+            "src/Formatters/Pretty.php",
+            "src/Formatters/Plain.php",
+            "src/Formatters/Json.php"
         ]
     },
     "scripts": {
